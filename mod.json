@@ -1,0 +1,114 @@
+{
+	"geode": "5.10.1",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "pelmeshkagrom.editor-physics",
+	"name": "Editor Physics",
+	"version": "v1.0.0",
+	"developer": "pelmeshkagrom",
+	"description": "Real-time physics simulation inside the level editor",
+	"dependencies": {
+		"geode.node-ids": ">=v1.23.3"
+	},
+	"tags": ["editor", "enhancement", "utility", "offline"],
+	"links": {
+		"community": "https://discord.gg/y8fqT5bP6c",
+		"source": "https://github.com/pelmeshkagrom/editor-physics"
+	},
+	"resources": {
+		"sprites": [
+			"resources/*.png"
+		]
+	},
+	"settings": {
+		"world-title": {
+			"type": "title",
+			"name": "World"
+		},
+		"world-gravity": {
+			"type": "float",
+			"name": "World Gravity",
+			"description": "Controls gravity strength. Higher values make objects fall faster.",
+			"default": 10.0,
+			"min": 0.1,
+			"max": 30.0
+		},
+		"physics-refresh-rate": {
+			"type": "int",
+			"name": "Physics Refresh Rate",
+			"description": "Simulation steps per second. Note: This can impact performance.",
+			"default": 60,
+			"min": 60,
+			"max": 240
+		},
+		"dynamic-bodies-title": {
+			"type": "title",
+			"name": "Dynamic Bodies"
+		},
+		"friction": {
+			"type": "float",
+			"name": "Friction",
+			"description": "Controls how much objects slide against each other. 0.0 is ice, higher values add more grip.",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 5.0
+		},
+		"restitution": {
+			"type": "float",
+			"name": "Bounciness",
+			"description": "Controls how much objects bounce on impact.",
+			"default": 0.0,
+			"min": 0.0,
+			"max": 1.0
+		},
+		"linear-damping": {
+			"type": "float",
+			"name": "Linear Damping",
+			"description": "Air resistance. Controls how fast moving objects slow down over time.",
+			"default": 0.3,
+			"min": 0.1,
+			"max": 50.0
+		},
+		"angular-damping": {
+			"type": "float",
+			"name": "Angular Damping",
+			"description": "Rotational resistance. Controls how fast spinning objects stop rotating.",
+			"default": 0.5,
+			"min": 0.1,
+			"max": 50.0
+		},
+		"ui-title": {
+			"type": "title",
+			"name": "UI"
+		},
+		"enable-editor-button": {
+			"type": "bool",
+			"name": "Enable Button",
+			"description": "Show the Toggle Physics button in the editor.",
+			"default": true
+		},
+		"editor-button-position": {
+			"type": "string",
+			"name": "Button Position",
+			"default": "Top Left Menu",
+			"one-of": ["Top Left Menu", "Top Right Menu"],
+			"enable-if": "enable-editor-button",
+			"enable-if-description": "Requires the button to be enabled"
+		},
+		"shortcuts-title": {
+			"type": "title",
+			"name": "Shortcuts"
+		},
+		"toggle-physics": {
+			"type": "keybind",
+			"name": "Physics Toggle Key",
+			"description": "Key to toggle the physics simulation.",
+			"category": "editor",
+			"default": ""
+		}
+	}
+}
