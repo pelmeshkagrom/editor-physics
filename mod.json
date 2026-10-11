@@ -8,7 +8,7 @@
 	},
 	"id": "pelmeshkagrom.editor-physics",
 	"name": "Editor Physics",
-	"version": "v1.0.0",
+	"version": "v1.0.1",
 	"developer": "pelmeshkagrom",
 	"description": "Real-time physics simulation inside the level editor",
 	"dependencies": {

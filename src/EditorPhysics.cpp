@@ -283,12 +283,6 @@ void EditorPhysics::setToggleBtn(CCMenuItemSpriteExtra* btn) {
 	m_togglePhysicsBtn = btn;
 }
 
-void EditorPhysics::setBtnVisible(bool visible) {
-	if(!m_togglePhysicsBtn) return;
-
-	m_togglePhysicsBtn->setVisible(visible);
-}
-
 void EditorPhysics::togglePhysics() {
 	if(!m_isSimulating) {
 		applyPhysics();

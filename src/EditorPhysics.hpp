@@ -76,7 +76,6 @@ public:
 	bool getBtnEnabled();
 	std::string getBtnPos();
 	void setToggleBtn(CCMenuItemSpriteExtra* btn);
-	void setBtnVisible(bool visible);
 	void togglePhysics();
 	void stopPhysics();
 	bool isSimulating();

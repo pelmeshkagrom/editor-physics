@@ -22,6 +22,7 @@ class $modify(EPEditorUI, EditorUI) {
 				settingsMenu->addChild(togglePhysicsBtn);
 				settingsMenu->updateLayout();
 				physicsManager->setToggleBtn(togglePhysicsBtn);
+				this->m_uiItems->addObject(togglePhysicsBtn);
 			}
 		}
 

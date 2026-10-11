@@ -38,16 +38,8 @@ class $modify(EPLevelEditorLayer, LevelEditorLayer) {
 	void onPlaytest() {
 		if(m_fields->physicsManager) {
 			if(m_fields->physicsManager->isSimulating()) m_fields->physicsManager->stopPhysics();
-			m_fields->physicsManager->setBtnVisible(false);
 		}
 		LevelEditorLayer::onPlaytest();
-	}
-
-	void onStopPlaytest() {
-		LevelEditorLayer::onStopPlaytest();
-		if(m_fields->physicsManager) {
-			m_fields->physicsManager->setBtnVisible(true);
-		}
 	}
 
 	void removeObject(GameObject* object, bool noUndo) {
