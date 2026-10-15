@@ -23,7 +23,8 @@ Bring real-time physics simulation right into the Geometry Dash level editor!
 ## Configuration
 - World gravity strength and physics refresh rate
 - Dynamic objects' physics parameters (Friction, Bounciness, Damping)
-- Toggle button visibility and its position settings
+- Random impulse options to apply a physical force to objects on simulation start
+- Toggle button position settings
 - Customizable keybind for toggling the simulation
 
 ### Support

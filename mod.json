@@ -8,7 +8,7 @@
 	},
 	"id": "pelmeshkagrom.editor-physics",
 	"name": "Editor Physics",
-	"version": "v1.0.1",
+	"version": "v1.1.0",
 	"developer": "pelmeshkagrom",
 	"description": "Real-time physics simulation inside the level editor",
 	"dependencies": {
@@ -33,7 +33,7 @@
 			"type": "float",
 			"name": "World Gravity",
 			"description": "Controls gravity strength. Higher values make objects fall faster.",
-			"default": 10.0,
+			"default": 12.5,
 			"min": 0.1,
 			"max": 30.0
 		},
@@ -63,7 +63,11 @@
 			"description": "Controls how much objects bounce on impact.",
 			"default": 0.0,
 			"min": 0.0,
-			"max": 1.0
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1
+			}
 		},
 		"linear-damping": {
 			"type": "float",
@@ -81,23 +85,45 @@
 			"min": 0.1,
 			"max": 50.0
 		},
+		"random-impulse-title": {
+			"type": "title",
+			"name": "Random Impulse"
+		},
+		"enable-random-impulse": {
+			"type": "bool",
+			"name": "Enable Random Impulse",
+			"description": "Applies a physical impulse at a random angle on simulation start.",
+			"default": false
+		},
+		"random-impulse-base": {
+			"type": "float",
+			"name": "Base Force",
+			"description": "The baseline strength of the impulse.",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 50.0,
+			"enable-if": "enable-random-impulse",
+			"enable-if-description": "Requires Enable Random Impulse"
+		},
+		"random-impulse-spread": {
+			"type": "float",
+			"name": "Spread",
+			"description": "The maximum random deviation added to the base force.",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 50.0,
+			"enable-if": "enable-random-impulse",
+			"enable-if-description": "Requires Enable Random Impulse"
+		},
 		"ui-title": {
 			"type": "title",
 			"name": "UI"
-		},
-		"enable-editor-button": {
-			"type": "bool",
-			"name": "Enable Button",
-			"description": "Show the Toggle Physics button in the editor.",
-			"default": true
 		},
 		"editor-button-position": {
 			"type": "string",
 			"name": "Button Position",
 			"default": "Top Left Menu",
-			"one-of": ["Top Left Menu", "Top Right Menu"],
-			"enable-if": "enable-editor-button",
-			"enable-if-description": "Requires the button to be enabled"
+			"one-of": ["Top Left Menu", "Top Right Menu"]
 		},
 		"shortcuts-title": {
 			"type": "title",

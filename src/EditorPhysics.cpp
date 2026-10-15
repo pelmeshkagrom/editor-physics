@@ -5,45 +5,23 @@
 
 void EditorPhysics::loadSettings() {
 	m_settings.gravity = Mod::get()->getSettingValue<float>("world-gravity");
-	m_timeStep = 1.0f / Mod::get()->getSettingValue<int64_t>("physics-refresh-rate");
+	m_settings.timeStep = 1.0f / Mod::get()->getSettingValue<int64_t>("physics-refresh-rate");
 
 	m_settings.friction = Mod::get()->getSettingValue<float>("friction");
 	m_settings.restitution = Mod::get()->getSettingValue<float>("restitution");
 	m_settings.linearDamping = Mod::get()->getSettingValue<float>("linear-damping");
 	m_settings.angularDamping = Mod::get()->getSettingValue<float>("angular-damping");
 
-	m_settings.enableEditorBtn = Mod::get()->getSettingValue<bool>("enable-editor-button");
+	m_settings.enableRandImpulse = Mod::get()->getSettingValue<bool>("enable-random-impulse");
+	m_settings.randImpulseBase = Mod::get()->getSettingValue<float>("random-impulse-base");
+	m_settings.randImpulseSpread = Mod::get()->getSettingValue<float>("random-impulse-spread");
+
 	m_settings.editorBtnPos = Mod::get()->getSettingValue<std::string>("editor-button-position");
-}
-
-void EditorPhysics::initWorld() {
-	b2Vec2 gravity(0.0f, -m_settings.gravity);
-	m_world = new b2World(gravity);
-
-	b2BodyDef groundBodyDef;
-	auto groundBody = m_world->CreateBody(&groundBodyDef);
-
-	b2PolygonShape groundBox;
-	groundBox.SetAsBox(99999.0f, 1.0f, b2Vec2(0.0f, groundHeight - 1.0f), 0.0f);
-
-	b2FixtureDef groundFixtureDef;
-	groundFixtureDef.density = 0.0f;
-	groundFixtureDef.shape = &groundBox;
-	groundFixtureDef.friction = staticObjectFriction;
-	groundFixtureDef.restitution = staticObjectRestitution;
-	groundBody->CreateFixture(&groundFixtureDef);
 }
 
 void EditorPhysics::cleanMaps() {
 	m_dynamicBodies.clear();
 	m_dynamicMap.clear();
-}
-
-void EditorPhysics::cleanWorld() {
-	if(m_world) {
-		delete m_world;
-		m_world = nullptr;
-	}
 }
 
 bool EditorPhysics::isObjTypeSupported(GameObject* obj) {
@@ -171,12 +149,23 @@ void EditorPhysics::applyPhysics() {
 		if(obj) selectedSet.insert(obj);
 	}
 
+	std::uniform_real_distribution<float> spreadDist(0.0f, m_settings.randImpulseSpread);
+	std::uniform_real_distribution<float> angleDist(0.0f, 2.0f * b2_pi);
+
 	bool simulationWillStart = false;
 
 	for(auto obj : selectedObjects) {
 		if(!obj || !isObjTypeSupported(obj)) continue;
 
 		if(auto body = createBodyForObj(obj, PhysicsObjectType::DynamicObject)) {
+			if(m_settings.enableRandImpulse) {
+				float totalForce = m_settings.randImpulseBase + spreadDist(m_random);
+				float randAngle = angleDist(m_random);
+				body->SetLinearVelocity(b2Vec2(
+					totalForce * std::cos(randAngle),
+					totalForce * std::sin(randAngle)
+				));
+			}
 			m_dynamicBodies.push_back(body);
 			m_dynamicMap[obj] = body;
 			obj->activateObject();
@@ -229,9 +218,9 @@ void EditorPhysics::update(float dt) {
 
 	bool physicsCalculated = false;
 	m_timeAccumulator += dt;
-	while(m_timeAccumulator >= m_timeStep) {
-		m_world->Step(m_timeStep, 8, 3);
-		m_timeAccumulator -= m_timeStep;
+	while(m_timeAccumulator >= m_settings.timeStep) {
+		m_world->Step(m_settings.timeStep, 8, 3);
+		m_timeAccumulator -= m_settings.timeStep;
 		physicsCalculated = true;
 	}
 
@@ -258,10 +247,35 @@ void EditorPhysics::setBtnSprite(bool isRunning) {
 	if(!m_togglePhysicsBtn) return;
 
 	if(isRunning) {
-		m_togglePhysicsBtn->setSprite(CircleButtonSprite::createWithSprite("stop-physics.png"_spr, 1.f, CircleBaseColor::Green, CircleBaseSize::Small));
+		m_togglePhysicsBtn->setSprite(CircleButtonSprite::createWithSprite("stop-physics.png"_spr, 1.f, CircleBaseColor::Cyan, CircleBaseSize::Small));
 	} else {
 		m_togglePhysicsBtn->setSprite(CircleButtonSprite::createWithSprite("start-physics.png"_spr, 1.f, CircleBaseColor::Green, CircleBaseSize::Small));
 	}
+}
+
+void EditorPhysics::cleanWorld() {
+	if(m_world) {
+		delete m_world;
+		m_world = nullptr;
+	}
+}
+
+void EditorPhysics::initWorld() {
+	b2Vec2 gravity(0.0f, -m_settings.gravity);
+	m_world = new b2World(gravity);
+
+	b2BodyDef groundBodyDef;
+	auto groundBody = m_world->CreateBody(&groundBodyDef);
+
+	b2PolygonShape groundBox;
+	groundBox.SetAsBox(99999.0f, 1.0f, b2Vec2(0.0f, groundHeight - 1.0f), 0.0f);
+
+	b2FixtureDef groundFixtureDef;
+	groundFixtureDef.density = 0.0f;
+	groundFixtureDef.shape = &groundBox;
+	groundFixtureDef.friction = staticObjectFriction;
+	groundFixtureDef.restitution = staticObjectRestitution;
+	groundBody->CreateFixture(&groundFixtureDef);
 }
 
 EditorPhysics* EditorPhysics::get() {
@@ -269,14 +283,6 @@ EditorPhysics* EditorPhysics::get() {
 		s_instance = new EditorPhysics();
 	}
 	return s_instance;
-}
-
-bool EditorPhysics::getBtnEnabled() {
-	return m_settings.enableEditorBtn;
-}
-
-std::string EditorPhysics::getBtnPos() {
-	return m_settings.editorBtnPos;
 }
 
 void EditorPhysics::setToggleBtn(CCMenuItemSpriteExtra* btn) {

@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <vector>
 #include <unordered_set>
+#include <random>
 
 using namespace geode::prelude;
 
@@ -22,18 +23,9 @@ enum class PhysicsObjectType {
 
 class EditorPhysics : public cocos2d::CCObject {
 private:
-	float m_timeStep = 1.0f / 60.0f;
+	std::mt19937 m_random;
+
 	float m_timeAccumulator = 0.0f;
-	struct Settings {
-		float gravity = 10.0f;
-		float friction = 0.5f;
-		float restitution = 0.0f;
-		float linearDamping = 0.3f;
-		float angularDamping = 0.5f;
-		bool enableEditorBtn = true;
-		std::string editorBtnPos = "Top Left Menu";
-	};
-	Settings m_settings;
 	void loadSettings();
 
 	const std::unordered_set<std::uint16_t> SPIKE_IDS = {8, 39, 103, 392, 216, 217, 218, 458, 144, 205, 145, 459, 177, 178, 179};
@@ -51,9 +43,7 @@ private:
 
 	CCMenuItemSpriteExtra* m_togglePhysicsBtn = nullptr;
 
-	void initWorld();
 	void cleanMaps();
-	void cleanWorld();
 	bool isObjTypeSupported(GameObject* obj);
 	b2Body* createBodyForObj(GameObject* obj, PhysicsObjectType type);
 	void applyPhysics();
@@ -62,7 +52,24 @@ private:
 	void update(float dt);
 	void setBtnSprite(bool isRunning);
 public:
+	struct Settings {
+		float gravity = 10.0f;
+		float timeStep = 1.0f / 60.0f;
+		float friction = 0.5f;
+		float restitution = 0.0f;
+		float linearDamping = 0.3f;
+		float angularDamping = 0.5f;
+		bool enableRandImpulse = false;
+		float randImpulseBase = 1.0f;
+		float randImpulseSpread = 1.0f;
+		std::string editorBtnPos = "Top Left Menu";
+	};
+	Settings m_settings;
+	void cleanWorld();
+	void initWorld();
 	EditorPhysics() {
+		std::random_device rd;
+		m_random = std::mt19937(rd());
 		loadSettings();
 		initWorld();
 	}
@@ -73,8 +80,6 @@ public:
 		s_instance = nullptr;
 	}
 	static EditorPhysics* get();
-	bool getBtnEnabled();
-	std::string getBtnPos();
 	void setToggleBtn(CCMenuItemSpriteExtra* btn);
 	void togglePhysics();
 	void stopPhysics();

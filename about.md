@@ -15,7 +15,8 @@ Bring real-time <c-34e89e>physics simulation</c> right into the Geometry Dash le
 ## Configuration
 - World <c-387fec>gravity strength</c> and <c-387fec>physics refresh rate</c>
 - Dynamic objects' <c-387fec>physics parameters</c> (Friction, Bounciness, Damping)
-- Toggle button visibility and its position settings
+- <c-387fec>Random impulse options</c> to apply a physical force to objects on simulation start
+- Toggle button position settings
 - Customizable keybind for toggling the simulation
 
 ### Support
