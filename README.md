@@ -29,3 +29,6 @@ Bring real-time physics simulation right into the Geometry Dash level editor!
 
 ### Support
 Join the [Discord server](https://discord.gg/y8fqT5bP6c) for support & bug reports
+
+### Credits
+This mod uses the Box2D physics engine (MIT License) © 2019 Erin Catto
