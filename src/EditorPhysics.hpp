@@ -1,20 +1,12 @@
 #pragma once
 #include <Geode/Geode.hpp>
-#include <Geode/utils/cocos.hpp>
 #include <box2d/box2d.h>
 #include <string>
-#include <cstdint>
 #include <vector>
-#include <unordered_set>
 #include <random>
+#include <unordered_map>
 
 using namespace geode::prelude;
-
-constexpr float PTM_RATIO = 30.0f;
-constexpr float groundHeight = 89.78f / PTM_RATIO;
-constexpr float collisionOffset = 0.5f / PTM_RATIO;
-constexpr float staticObjectFriction = 0.5f;
-constexpr float staticObjectRestitution = 0.1f;
 
 enum class PhysicsObjectType {
 	DynamicObject,
@@ -23,26 +15,21 @@ enum class PhysicsObjectType {
 
 class EditorPhysics : public cocos2d::CCObject {
 private:
+	EditorPhysics();
+
 	std::mt19937 m_random;
-
-	float m_timeAccumulator = 0.0f;
-	void loadSettings();
-
-	const std::unordered_set<std::uint16_t> SPIKE_IDS = {8, 39, 103, 392, 216, 217, 218, 458, 144, 205, 145, 459, 177, 178, 179};
-	const std::unordered_set<std::uint16_t> CIRCLE_IDS = {1705, 1706, 1707, 1708, 1709, 1710, 1734, 1735, 1736, 186, 187, 188, 740, 741, 742, 678, 679, 680, 1619, 1620, 183, 184, 1701, 1702, 3611};
-	const std::unordered_set<std::uint16_t> RECT_IDS = {3610, 1722, 1725, 1726};
-	const std::unordered_set<std::uint16_t> SLOPE_EXCLUDE_IDS = {1717, 1718, 1723, 1724};
 
 	static inline EditorPhysics* s_instance = nullptr;
 	b2World* m_world = nullptr;
 	bool m_isSimulating = false;
-	bool m_isPaused = false;
+	float m_timeAccumulator = 0.0f;
 
 	std::vector<b2Body*> m_dynamicBodies;
 	std::unordered_map<GameObject*, b2Body*> m_dynamicMap;
 
 	CCMenuItemSpriteExtra* m_togglePhysicsBtn = nullptr;
 
+	void loadSettings();
 	void cleanMaps();
 	bool isObjTypeSupported(GameObject* obj);
 	b2Body* createBodyForObj(GameObject* obj, PhysicsObjectType type);
@@ -52,6 +39,8 @@ private:
 	void update(float dt);
 	void setBtnSprite(bool isRunning);
 public:
+	~EditorPhysics();
+
 	struct Settings {
 		float gravity = 10.0f;
 		float timeStep = 1.0f / 60.0f;
@@ -62,29 +51,18 @@ public:
 		bool enableRandImpulse = false;
 		float randImpulseBase = 1.0f;
 		float randImpulseSpread = 1.0f;
-		std::string editorBtnPos = "Top Left Menu";
+		std::string editorBtnPos = "Playback Menu";
+		bool showSettingsBtn = true;
 	};
 	Settings m_settings;
+
+	static EditorPhysics* get();
 	void cleanWorld();
 	void initWorld();
-	EditorPhysics() {
-		std::random_device rd;
-		m_random = std::mt19937(rd());
-		loadSettings();
-		initWorld();
-	}
-	~EditorPhysics() {
-		stopSchedule();
-		cleanMaps();
-		cleanWorld();
-		s_instance = nullptr;
-	}
-	static EditorPhysics* get();
 	void setToggleBtn(CCMenuItemSpriteExtra* btn);
 	void togglePhysics();
 	void stopPhysics();
 	bool isSimulating();
 	bool isObjectSimulating(GameObject* obj);
 	void disableEditorButtons();
-	void setPaused(bool paused);
 };

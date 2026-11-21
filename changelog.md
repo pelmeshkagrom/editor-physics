@@ -1,3 +1,10 @@
+# 1.2.0
+- Updated to 2.2091 and Geode v6
+- Added support for pads and more hazards
+- Added an option to show/hide the mod settings button in the editor pause menu
+- Changed the default toggle physics button position to Playback Menu
+- Other fixes and improvements
+
 # 1.1.0
 - Added Random Impulse feature
 - Added Mod Settings button to the editor pause menu

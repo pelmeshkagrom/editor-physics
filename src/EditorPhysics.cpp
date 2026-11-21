@@ -1,7 +1,37 @@
 #include "EditorPhysics.hpp"
+#include <Geode/utils/cocos.hpp>
 #include <Geode/ui/BasedButtonSprite.hpp>
+#include <unordered_set>
+#include <cstdint>
 #include <cmath>
 #include <algorithm>
+
+namespace {
+	constexpr float PTM_RATIO = 30.0f;
+	constexpr float groundHeight = 89.78f / PTM_RATIO;
+	constexpr float collisionOffset = 0.5f / PTM_RATIO;
+	constexpr float staticObjectFriction = 0.5f;
+	constexpr float staticObjectRestitution = 0.1f;
+
+	const std::unordered_set<std::uint16_t> SPIKE_IDS = {8, 39, 103, 392, 216, 217, 218, 458, 144, 205, 145, 459, 177, 178, 179};
+	const std::unordered_set<std::uint16_t> CIRCLE_IDS = {1705, 1706, 1707, 1708, 1709, 1710, 1734, 1735, 1736, 186, 187, 188, 740, 741, 742, 678, 679, 680, 1619, 1620, 183, 184, 1701, 1702, 3611};
+	const std::unordered_set<std::uint16_t> RECT_IDS = {3610, 1715, 1719, 1720, 1721, 1722, 1725, 1726, 1727, 1728, 1729, 1730, 1731, 1732};
+	const std::unordered_set<std::uint16_t> SLOPE_EXCLUDE_IDS = {1717, 1718, 1723, 1724};
+}
+
+EditorPhysics::EditorPhysics() {
+	std::random_device rd;
+	m_random = std::mt19937(rd());
+	loadSettings();
+	initWorld();
+}
+
+EditorPhysics::~EditorPhysics() {
+	stopSchedule();
+	cleanMaps();
+	cleanWorld();
+	s_instance = nullptr;
+}
 
 void EditorPhysics::loadSettings() {
 	m_settings.gravity = Mod::get()->getSettingValue<float>("world-gravity");
@@ -17,6 +47,7 @@ void EditorPhysics::loadSettings() {
 	m_settings.randImpulseSpread = Mod::get()->getSettingValue<float>("random-impulse-spread");
 
 	m_settings.editorBtnPos = Mod::get()->getSettingValue<std::string>("editor-button-position");
+	m_settings.showSettingsBtn = Mod::get()->getSettingValue<bool>("show-settings-button");
 }
 
 void EditorPhysics::cleanMaps() {
@@ -27,10 +58,13 @@ void EditorPhysics::cleanMaps() {
 bool EditorPhysics::isObjTypeSupported(GameObject* obj) {
 	switch (obj->getType()) {
 		case GameObjectType::Solid:
-			return true;
 		case GameObjectType::Hazard:
-			return true;
 		case GameObjectType::Slope:
+		case GameObjectType::YellowJumpPad:
+		case GameObjectType::PinkJumpPad:
+		case GameObjectType::RedJumpPad:
+		case GameObjectType::GravityPad:
+		case GameObjectType::SpiderPad:
 			return true;
 		default:
 			return false;
@@ -53,8 +87,19 @@ b2Body* EditorPhysics::createBodyForObj(GameObject* obj, PhysicsObjectType type)
 	b2CircleShape circleShape;
 	b2Shape* chosenShape = nullptr;
 
+	if(objID == 1733) {
+		isRotatable = true;
+		objType = GameObjectType::Slope;
+	}
+
 	switch (objType) {
-		case GameObjectType::Solid: {
+		case GameObjectType::Solid:
+		case GameObjectType::YellowJumpPad:
+		case GameObjectType::PinkJumpPad:
+		case GameObjectType::RedJumpPad:
+		case GameObjectType::GravityPad:
+		case GameObjectType::SpiderPad: {
+			isRotatable = (objType != GameObjectType::Solid);
 			polygonShape.SetAsBox(std::abs(width) / 2.0f, std::abs(height) / 2.0f);
 			chosenShape = &polygonShape;
 			break;
@@ -128,7 +173,7 @@ b2Body* EditorPhysics::createBodyForObj(GameObject* obj, PhysicsObjectType type)
 }
 
 void EditorPhysics::applyPhysics() {
-	if(!m_world || m_isSimulating || m_isPaused) return;
+	if(!m_world || m_isSimulating) return;
 
 	auto editorLayer = LevelEditorLayer::get();
 	if(!editorLayer) return;
@@ -173,17 +218,18 @@ void EditorPhysics::applyPhysics() {
 		}
 	}
 
-	for(auto obj : allObjects) {
-		if(!obj || selectedSet.contains(obj) || !isObjTypeSupported(obj)) continue;
-
-		createBodyForObj(obj, PhysicsObjectType::StaticObject);
-	}
-
 	if(simulationWillStart) {
+		for(auto obj : allObjects) {
+			if(!obj || selectedSet.contains(obj) || !isObjTypeSupported(obj)) continue;
+
+			createBodyForObj(obj, PhysicsObjectType::StaticObject);
+		}
+
 		disableEditorButtons();
 		editorUI->deactivateRotationControl();
 		editorUI->deactivateScaleControl();
 		editorUI->deactivateTransformControl();
+		editorLayer->m_redoObjects->removeAllObjects();
 		editorLayer->m_undoObjects->addObject(editorUI->createUndoObject(UndoCommand::Transform, true));
 		setBtnSprite(true);
 		startSchedule();
@@ -253,6 +299,13 @@ void EditorPhysics::setBtnSprite(bool isRunning) {
 	}
 }
 
+EditorPhysics* EditorPhysics::get() {
+	if(!s_instance && LevelEditorLayer::get()) {
+		s_instance = new EditorPhysics();
+	}
+	return s_instance;
+}
+
 void EditorPhysics::cleanWorld() {
 	if(m_world) {
 		delete m_world;
@@ -276,13 +329,6 @@ void EditorPhysics::initWorld() {
 	groundFixtureDef.friction = staticObjectFriction;
 	groundFixtureDef.restitution = staticObjectRestitution;
 	groundBody->CreateFixture(&groundFixtureDef);
-}
-
-EditorPhysics* EditorPhysics::get() {
-	if(!s_instance && LevelEditorLayer::get() != nullptr) {
-		s_instance = new EditorPhysics();
-	}
-	return s_instance;
 }
 
 void EditorPhysics::setToggleBtn(CCMenuItemSpriteExtra* btn) {
@@ -310,9 +356,17 @@ void EditorPhysics::stopPhysics() {
 					if(obj) allSet.insert(obj);
 				}
 
+				auto winSize = CCDirector::get()->getWinSize();
+				auto bottomLeft = editorLayer->m_objectLayer->convertToNodeSpace({0, 0});
+				auto topRight = editorLayer->m_objectLayer->convertToNodeSpace({winSize.width, winSize.height});
+				auto camRect = CCRect(bottomLeft.x, bottomLeft.y, topRight.x - bottomLeft.x, topRight.y - bottomLeft.y);
+
 				for(const auto& [object, body] : m_dynamicMap) {
 					if(!object) continue;
-					if(allSet.contains(object)) editorUI->moveObject(object, {0, 0});
+					if(allSet.contains(object)) {
+						editorUI->moveObject(object, {0, 0});
+						if(!object->getObjectTextureRect().intersectsRect(camRect)) object->deactivateObject(true);
+					}
 				}
 			}
 
@@ -331,13 +385,14 @@ bool EditorPhysics::isSimulating() {
 }
 
 bool EditorPhysics::isObjectSimulating(GameObject* obj) {
+	if(!m_isSimulating) return false;
 	return m_dynamicMap.contains(obj);
 }
 
 void EditorPhysics::disableEditorButtons() {
 	if(auto editorUI = EditorUI::get()) {
 		if(auto menu = editorUI->getChildByID("undo-menu")) {
-			for(const char* btnID : {"undo-button", "redo-button", "delete-trash-button"}) {
+			for(const char* btnID : {"undo-button", "redo-button", "delete-button"}) {
 				if(auto btn = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID(btnID))) {
 					btn->setColor(ccColor3B(166, 166, 166));
 					btn->setOpacity(175);
@@ -355,8 +410,4 @@ void EditorPhysics::disableEditorButtons() {
 			}
 		}
 	}
-}
-
-void EditorPhysics::setPaused(bool paused) {
-	m_isPaused = paused;
 }

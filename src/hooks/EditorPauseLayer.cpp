@@ -1,52 +1,46 @@
 #include <Geode/Geode.hpp>
 #include <Geode/ui/GeodeUI.hpp>
-#include <Geode/modify/EditorPauseLayer.hpp>
 
+#include "EditorPauseLayer.hpp"
 #include "../EditorPhysics.hpp"
 
 using namespace geode::prelude;
 
-class $modify(EPEditorPauseLayer, EditorPauseLayer) {
-	struct Fields {
-		EditorPhysics* physicsManager = nullptr;
-		~Fields() {
-			if(physicsManager) {
-				physicsManager->setPaused(false);
-			}
-		}
-	};
+bool EPEditorPauseLayer::init(LevelEditorLayer* layer) {
+	if(!EditorPauseLayer::init(layer)) return false;
 
-	bool init(LevelEditorLayer* layer) {
-		if(!EditorPauseLayer::init(layer)) return false;
+	if(EditorPhysics::get()->isSimulating()) {
+		this->scheduleOnce(schedule_selector(EPEditorPauseLayer::stopPhysics), 0.0f);
+	}
 
-		m_fields->physicsManager = EditorPhysics::get();
-		if(m_fields->physicsManager) {
-			m_fields->physicsManager->setPaused(true);
-			if(m_fields->physicsManager->isSimulating())
-				this->scheduleOnce(schedule_selector(EPEditorPauseLayer::stopPhysics), 0.0f);
-		}
+	this->updateBtn();
 
-		if(auto bottomMenu = this->getChildByID("guidelines-menu")) {
+	return true;
+}
+
+void EPEditorPauseLayer::updateBtn() {
+	if(auto topMenu = this->getChildByID("top-menu")) {
+		if(EditorPhysics::get()->m_settings.showSettingsBtn) {
 			auto openModSettingsBtn = CCMenuItemSpriteExtra::create(
 				CCSprite::create("settings-button.png"_spr),
 				this,
 				menu_selector(EPEditorPauseLayer::onOpenModSettings)
 			);
-			openModSettingsBtn->setID("editor-physics-settings-button");
-			bottomMenu->addChild(openModSettingsBtn);
-			bottomMenu->updateLayout();
-		}
-
-		return true;
-	}
-
-	void onOpenModSettings(cocos2d::CCObject* sender) {
-		geode::openSettingsPopup(Mod::get(), true);
-	}
-
-	void stopPhysics(float dt) {
-		if(m_fields->physicsManager && m_fields->physicsManager->isSimulating()) {
-			m_fields->physicsManager->stopPhysics();
+			openModSettingsBtn->setID("editor-physics-settings-button"_spr);
+			topMenu->addChild(openModSettingsBtn);
+			topMenu->updateLayout();
+		} else if(auto btn = topMenu->getChildByID("editor-physics-settings-button"_spr)) {
+			topMenu->removeChild(btn);
+			topMenu->updateLayout();
 		}
 	}
-};
+}
+
+void EPEditorPauseLayer::onOpenModSettings(CCObject* sender) {
+	openSettingsPopup(Mod::get());
+}
+
+void EPEditorPauseLayer::stopPhysics(float dt) {
+	auto physicsManager = EditorPhysics::get();
+	if(physicsManager->isSimulating()) physicsManager->stopPhysics();
+}
