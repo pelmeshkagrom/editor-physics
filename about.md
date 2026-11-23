@@ -11,6 +11,8 @@ Bring real-time <c-34e89e>physics simulation</c> right into the Geometry Dash le
 - Slopes
 - Spikes
 - Circular objects
+- Some other hazards
+- Pads
 
 ## Configuration
 - World <c-3b82f6>gravity strength</c> and <c-3b82f6>physics refresh rate</c>

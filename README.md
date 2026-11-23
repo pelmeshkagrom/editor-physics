@@ -19,6 +19,8 @@ Bring real-time physics simulation right into the Geometry Dash level editor!
 - Slopes
 - Spikes
 - Circular objects
+- Some other hazards
+- Pads
 
 ## Configuration
 - World gravity strength and physics refresh rate
